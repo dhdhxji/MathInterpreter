@@ -6,6 +6,8 @@ class Operation
 public:
     Operation(int priority, double (*func)(const double& p1, const double& p2),
               bool prefix = false);
+    //Operation(const Operation& op);
+    //Operation(Operation&& op);
 
     double eval(const double& p1, const double& p2);
     int getPriority();

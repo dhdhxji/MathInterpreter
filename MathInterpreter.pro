@@ -4,6 +4,10 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
-        main.cpp
+        main.cpp \
+        mathinterpreter.cpp \
+        operation.cpp
 
-HEADERS +=
+HEADERS += \
+    mathinterpreter.h \
+    operation.h

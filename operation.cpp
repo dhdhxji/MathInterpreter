@@ -5,6 +5,8 @@ Operation::Operation(int priority, double (*func)(const double& p1, const double
 {
     priority_ = priority;
     func_ = func;
+
+    isCanBePrefix_ = prefix;
 }
 
 int Operation::getPriority()
