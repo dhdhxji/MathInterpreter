@@ -13,9 +13,10 @@ MathInterpretProvider::MathInterpretProvider(char openBracket, char closeBracket
 }
 
 void MathInterpretProvider::addOperation(char symbol, int priority,
-                                            double (*evalFunction)(const double& op1, const double& op2))
+                                         double (*evalFunction)(const double& op1, const double& op2),
+                                         bool prefix)
 {
-    Operation current(priority, evalFunction);
+    Operation current(priority, evalFunction, prefix);
 
     opset_.emplace(symbol, current);
 }
@@ -69,7 +70,19 @@ std::string MathInterpretProvider::prepare(std::string input)
         if(current == ' ')
             continue;
 
-        else if(currentType == OPERATION || currentType == NUMBER
+        if(currentType == OPERATION)
+        {
+            if(prevType == OPERATION || prevType == OPEN_BRACKET || prevType == NONE)
+            {
+                if(getOperation(current).isCanBePrefix())
+                {
+                    result += '0';
+                }
+                else throw "Syntax error : operation can not have prefix form";
+            }
+            result += current;
+        }
+        else if(currentType == NUMBER
                 || currentType == OPEN_BRACKET || currentType == CLOSE_BRACKET)
             result.push_back(current);
 
@@ -227,4 +240,9 @@ int MathInterpretProvider::getOperationPriority(char op)
     if(op == openingBracket_ || op == closingBracket_)
         return -1;
     else return opset_.at(op).getPriority();
+}
+
+const Operation& MathInterpretProvider::getOperation(char c)
+{
+    return opset_.at(c);
 }

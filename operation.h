@@ -9,8 +9,9 @@ public:
     //Operation(const Operation& op);
     //Operation(Operation&& op);
 
-    double eval(const double& p1, const double& p2);
-    int getPriority();
+    double eval(const double& p1, const double& p2) const;
+    int getPriority() const;
+    bool isCanBePrefix() const;
 
 private:
     int priority_;

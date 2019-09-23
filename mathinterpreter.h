@@ -18,7 +18,8 @@ public:
     MathInterpretProvider(char openBracket, char closeBracket);
 
     void addOperation(char symbol, int priority,
-                      double (*evalFunction)(const double& op1, const double& op2));
+                      double (*evalFunction)(const double& op1, const double& op2),
+                      bool prefix = false);
 
 
     double eval(std::string input);
@@ -50,6 +51,7 @@ private:
     termType symbolType(std::string in);
 
     int getOperationPriority(char op);
+    const Operation& getOperation(char c);
 };
 
 #endif // MATHINTERPRETER_H

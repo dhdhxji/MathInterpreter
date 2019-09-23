@@ -38,13 +38,13 @@ int main()
 {
     MathInterpretProvider interpreter;
 
-    interpreter.addOperation('+', 0, &opPlus);
-    interpreter.addOperation('-', 0, &opMinus);
+    interpreter.addOperation('+', 0, &opPlus, true);
+    interpreter.addOperation('-', 0, &opMinus, true);
     interpreter.addOperation('*', 1, &opMultiply);
     interpreter.addOperation('/', 1, &opDIvision);
     interpreter.addOperation('^', 2, &opPower);
 
-    cout << "Available operations : + - * / ^, ( )" << endl;
+    cout << "Available operations : + - * / ^, ( ), 'quit' for exit" << endl;
 
     while(true)
     {
@@ -52,6 +52,9 @@ int main()
 
         string input;
         getline(cin, input);
+
+        if(input == "quit")
+            break;
 
         cout << "    = " << interpreter.eval(input) << endl;
     }
