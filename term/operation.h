@@ -1,16 +1,16 @@
 #ifndef OPERATION_H
 #define OPERATION_H
 
-class Operation
+#include "term.h"
+
+class Operation: public Term
 {
 public:
     Operation(int priority, double (*func)(const double& p1, const double& p2),
               bool prefix = false);
-    //Operation(const Operation& op);
-    //Operation(Operation&& op);
 
-    double eval(const double& p1, const double& p2) const;
-    int getPriority() const;
+    void eval(std::stack<double>&evalStack) const override;
+    int priority() const;
     bool isCanBePrefix() const;
 
 private:

@@ -17,6 +17,7 @@ void MathInterpretProvider::addOperation(char symbol, int priority,
                                          bool prefix)
 {
     Operation current(priority, evalFunction, prefix);
+    current.setTermType(OPERATION);
 
     opset_.emplace(symbol, current);
 }
@@ -26,10 +27,10 @@ double MathInterpretProvider::eval(std::string input)
     checkSyntax(input);
     std::string pureMath = prepare(input);
 
-    std::queue<std::string> termsToEval;
+    std::queue<Term*> termsToEval;
     parseTerms(pureMath, termsToEval);
 
-    std::queue<std::string> polishReverseQueueTerms;
+    std::queue<Term*> polishReverseQueueTerms;
     toPolishReverseNotation(termsToEval, polishReverseQueueTerms);
 
     return evalPolishReverseNotation(polishReverseQueueTerms);
@@ -92,7 +93,7 @@ std::string MathInterpretProvider::prepare(std::string input)
     return result;
 }
 
-void MathInterpretProvider::parseTerms(std::string input, std::queue<std::string>& terms)
+void MathInterpretProvider::parseTerms(std::string input, std::queue<Term*>& terms)
 {
     std::string buffer;
 
@@ -107,46 +108,62 @@ void MathInterpretProvider::parseTerms(std::string input, std::queue<std::string
             if((iter+1) == input.end() || nextType == OPERATION
                     || nextType == OPEN_BRACKET || nextType == CLOSE_BRACKET)
             {
-                terms.push(buffer);
+                Number* number = new Number(buffer);
+                number->setTermType(NUMBER);
+                terms.push(number);
                 buffer.clear();
             }
         }
-        else if(currentType == OPERATION
-                || currentType == OPEN_BRACKET || currentType == CLOSE_BRACKET)
+        else if(currentType == OPERATION)
         {
-            std::string temp;
-            temp += *iter;
-            terms.push(temp);
+            Term* op = new Operation(getOperation(*iter));
+            op->setTermType(OPERATION);
+
+            terms.push(op);
+        }
+        else if(currentType == OPEN_BRACKET)
+        {
+            Term* openBracket = new Operation(-1, nullptr);
+            openBracket->setTermType(OPEN_BRACKET);
+
+            terms.push(openBracket);
+        }
+        else if(currentType == CLOSE_BRACKET)
+        {
+            Term* closeBracket = new Operation(-1, nullptr);
+            closeBracket->setTermType(CLOSE_BRACKET);
+
+            terms.push(closeBracket);
         }
     }
 }
 
 
-void MathInterpretProvider::toPolishReverseNotation(std::queue<std::string>& input,
-                                                    std::queue<std::string>& output)
+void MathInterpretProvider::toPolishReverseNotation(std::queue<Term*>& input,
+                                                    std::queue<Term*>& output)
 {
-    std::stack<std::string>operationTransferStack;
+    std::stack<Operation*>operationTransferStack;
 
     while(!input.empty())      //transform to polish reverse notation
     {
-        std::string current = input.front();
+        Term* current = input.front();
         input.pop();
 
-        if(symbolType(current) == NUMBER)
+        if(current->type() == NUMBER)
         {
             output.push(current);
             continue;
         }
 
-        if(symbolType(current) == OPEN_BRACKET)
+        if(current->type() == OPEN_BRACKET)
         {
-            operationTransferStack.push(current);
+            operationTransferStack.push(dynamic_cast<Operation*>(current));
             continue;
         }
 
-        if(symbolType(current) == CLOSE_BRACKET)
+        if(current->type() == CLOSE_BRACKET)
         {
-            while(symbolType(operationTransferStack.top()) != OPEN_BRACKET)
+            while(operationTransferStack.top()->type() != OPEN_BRACKET)
             {
                 output.push(operationTransferStack.top());
                 operationTransferStack.pop();
@@ -156,18 +173,19 @@ void MathInterpretProvider::toPolishReverseNotation(std::queue<std::string>& inp
             continue;
         }
 
-        if(symbolType(current) == OPERATION)
+        if(current->type() == OPERATION)
         {
-            int currentPriority = getOperationPriority(current[0]);
+            Operation* currentOp = dynamic_cast<Operation*>(current);
+            int currentPriority = currentOp->priority();
 
             while(!operationTransferStack.empty() &&
-                    getOperationPriority(operationTransferStack.top()[0]) >= currentPriority)
+                    dynamic_cast<Operation*>(operationTransferStack.top())->priority() >= currentPriority)
             {
                 output.push(operationTransferStack.top());
                 operationTransferStack.pop();
             }
 
-            operationTransferStack.push(current);
+            operationTransferStack.push(dynamic_cast<Operation*>(current));
         }
     }
 
@@ -178,32 +196,17 @@ void MathInterpretProvider::toPolishReverseNotation(std::queue<std::string>& inp
     }
 }
 
-double MathInterpretProvider::evalPolishReverseNotation(std::queue<std::string> &input)
+double MathInterpretProvider::evalPolishReverseNotation(std::queue<Term*> &input)
 {
     std::stack<double> evaluateStack;
     while(!input.empty())
     {
-        std::string current = input.front();
+        Term* current = input.front();
+        current->eval(evaluateStack);
+
+        delete current;
+
         input.pop();
-
-        if(symbolType(current) == NUMBER)
-        {
-            evaluateStack.push(std::stod(current));
-        }
-
-        else if(symbolType(current) == OPERATION)
-        {
-            double operand2 = evaluateStack.top();
-            evaluateStack.pop();
-            double operand1 = evaluateStack.top();
-            evaluateStack.pop();
-
-
-            char chOp = current[0];
-            double resultValue = opset_.at(chOp).eval(operand1, operand2);
-
-            evaluateStack.push(resultValue);
-        }
     }
 
     if(evaluateStack.size() != 1)
@@ -239,7 +242,7 @@ int MathInterpretProvider::getOperationPriority(char op)
 {
     if(op == openingBracket_ || op == closingBracket_)
         return -1;
-    else return opset_.at(op).getPriority();
+    else return opset_.at(op).priority();
 }
 
 const Operation& MathInterpretProvider::getOperation(char c)

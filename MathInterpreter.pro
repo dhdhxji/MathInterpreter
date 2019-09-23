@@ -6,8 +6,14 @@ CONFIG -= qt
 SOURCES += \
         main.cpp \
         mathinterpreter.cpp \
-        operation.cpp
+        term/number.cpp \
+        term/operation.cpp \
+        term/specialterm.cpp \
+        term/term.cpp
 
 HEADERS += \
     mathinterpreter.h \
-    operation.h
+    term/number.h \
+    term/operation.h \
+    term/specialterm.h \
+    term/term.h

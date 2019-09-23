@@ -6,7 +6,10 @@
 #include <stack>
 #include <queue>
 
-#include "operation.h"
+#include "term/term.h"
+#include "term/operation.h"
+#include "term/number.h"
+#include "term/specialterm.h"
 
 
 
@@ -40,12 +43,12 @@ private:
     std::string prepare(std::string input);     //remove space characters, place operands
                                                 //in prefix form of notation
 
-    void parseTerms(std::string input, std::queue<std::string>& values);    //transform
+    void parseTerms(std::string input, std::queue<Term*>& terms);    //transform
                                                 //input string to queue of terms
 
-    void toPolishReverseNotation(std::queue<std::string>& input,
-                                 std::queue<std::string>& output);
-    double evalPolishReverseNotation(std::queue<std::string>& input);
+    void toPolishReverseNotation(std::queue<Term*>& input,
+                                 std::queue<Term*>& output);
+    double evalPolishReverseNotation(std::queue<Term*>& input);
 
     termType symbolType(char c);
     termType symbolType(std::string in);
